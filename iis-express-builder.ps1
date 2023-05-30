@@ -2,8 +2,10 @@ param ([string]$path)
 
 $script = $myinvocation.mycommand.definition
 $dir = Split-Path $MyInvocation.MyCommand.Path
+Write-Host
 Write-Host "Script location $script"
 Write-Host "Script started in $dir"
+Write-Host
 
 if((![string]::IsNullOrWhiteSpace($path))) {
     if((Test-Path $path)){
@@ -16,29 +18,120 @@ if((![string]::IsNullOrWhiteSpace($path))) {
         Write-Host "Path has been supplied passing in: $dir as working directory"
     }
     else {
-        Write-Host "Unable to locate $path please provide a valid path"
+        Write-Host "Unable to locate $path please provide a valid path"  -ForegroundColor Red
         exit
     }
 }
 
 if ((Test-Path "$dir\iis-express-config.json") -eq $false){
-    Write-Host "Could not find iis-express-config.json in $dir"
+    Write-Host "Could not find iis-express-config.json in $dir" -ForegroundColor Red
+    exit
+}
+
+# ============== Start Script
+Import-Module WebAdministration
+$hostsPath = "C:\Windows\System32\drivers\etc\hosts"
+Write-Host "Starting in $dir"
+#Load JSON
+$iisconfig = Get-Content  "$dir\iis-express-config.json" | Out-String | ConvertFrom-Json
+
+$iis = [pscustomobject]@{
+    siteBindings = $iisconfig."bindings"
+    dir = $dir
+}
+Write-Host "Loaded in JSON"
+Write-Host
+
+$checkingDir = Get-Item -Path $dir -Verbose
+$siteName = Split-Path -Leaf $checkingDir
+do {
+    $checkingDir = $checkingDir.Parent
+    $sln = Get-ChildItem -Path $checkingDir.FullName -Filter *.sln -ErrorAction SilentlyContinue | Select-Object -First 1
+} while (!$sln -and $checkingDir.Parent)
+
+if ($sln) {
+    Write-Host "Solution file found at $($sln.FullName)"
+    $slnName = $sln.Name.Replace($sln.Extension, "")
+    $newDir = Join-Path -Path $sln.Directory -ChildPath ".vs"
+    $newDir = Join-Path -Path $newDir -ChildPath $slnName
+    $newDir = Join-Path -Path $newDir -ChildPath "config"
+    $configFilePath = Join-Path -Path $newDir -ChildPath "applicationhost.config"
+
+    # Check if applicationHost.config file exists
+    if (Test-Path -Path $configFilePath) {
+        Write-Host "applicationhost.config file found"
+
+        Write-Host "SiteName $siteName"
+        # Load the XML file preserving whitespace
+        $xmlContent = Get-Content -Path $configFilePath -Raw
+        $xmlContent = $xmlContent -replace '^([ \t]+)<', '$1`n<'
+
+        # Create an XML document with preserved whitespace
+        $doc = New-Object System.Xml.XmlDocument
+        $doc.PreserveWhitespace = $true
+        $doc.LoadXml($xmlContent)
+       
+
+        # Find the site element with the specified name attribute
+        $siteElement = $doc.SelectSingleNode("//site[@name='$siteName']")
+
+        # Access the bindings node
+        $bindingsNode = $siteElement.SelectSingleNode("bindings")
+
+        # Select existing binding elements with bindingInformation starting with "*:443:"
+        $existingBindings = $bindingsNode.SelectNodes("binding[starts-with(@bindingInformation, '*:443:')]")
+
+        # Remove existing binding elements
+        foreach ($existingBinding in $existingBindings) {
+            $bindingsNode.RemoveChild($existingBinding)
+        }
+
+        # Create a new binding element for each item in $myBindings array
+        foreach ($bindingInfo in $iis.siteBindings) {
+            $newBindingNode = $doc.CreateElement("binding")
+            $newBindingNode.SetAttribute("protocol", "https")
+            $newBindingNode.SetAttribute("bindingInformation", "*:443:" + $bindingInfo)
+
+            # Append the new binding element to the bindings node
+            $bindingsNode.AppendChild($newBindingNode)
+        }
+
+        # Save the modified XML back to the file with preserved formatting
+        $settings = New-Object System.Xml.XmlWriterSettings
+        $settings.Indent = $true
+        $settings.IndentChars = "  "
+        
+        $stream = [System.IO.File]::OpenWrite($configFilePath)
+        $writer = [System.Xml.XmlWriter]::Create($stream, $settings)
+        $doc.WriteContentTo($writer)
+        $writer.Flush()
+        $writer.Close()
+        $stream.Close()
+    }
+    else
+    {
+        Write-Host "Unable to locate the applicationhost.config" -ForegroundColor Red
+        exit
+    }
+}
+else {
+    Write-Host "Unable to locate the solution file" -ForegroundColor Red
     exit
 }
 
 #Ensure our script is elevated to Admin permissions
 If (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))
 {
-    Write-Host "Script has been opened without Admin permissions, attempting to restart as admin"
+    Write-Host "Script has been opened without Admin permissions, attempting to restart as admin" -ForegroundColor Yellow
     $arguments = "-noexit & '" + $script + "'","-path $dir"
     Start-Process powershell -Verb runAs -ArgumentList $arguments
     Break
 }
+
 # Known limitations:
 # - does not handle entries with comments afterwards ("<ip>    <host>    # comment")
 # https://stackoverflow.com/questions/2602460/powershell-to-manipulate-host-file
 #
-
 function add-host([string]$filename, [string]$ip, [string]$hostname) {
     remove-host $filename $hostname
     $ip + "`t`t" + $hostname | Out-File -encoding ASCII -append $filename
@@ -163,23 +256,13 @@ function ensureSSL($iis){
         $DestStore.Close()
         }    
 
-        Write-Host "Configuring IIS Express to use this cert " $cert.Thumbprint " with this binding https://" $binding
-        IisExpressAdminCmd.exe setupsslUrl -url:https://$binding/ -CertHash:$cert.Thumbprint
+        $url = "https://" + $binding + ":443/"
+
+        Write-Host "Configuring IIS Express"
+        Write-Host 
+        .\IisExpressAdminCmd.exe setupsslUrl -url:$url -CertHash:$cert.Thumbprint
     }
 }
-
-# ============== Start Script
-Import-Module WebAdministration
-$hostsPath = "C:\Windows\System32\drivers\etc\hosts"
-Write-Host "Starting in $dir"
-#Load JSON
-$iisconfig = Get-Content  "$dir\iis-express-config.json" | Out-String | ConvertFrom-Json
-
-$iis = [pscustomobject]@{
-    siteBindings = $iisconfig."bindings"
-    dir = $dir
-    }
-Write-Host "Loaded in JSON"
 
 Write-Host "Ensuring SSL"
 ensureSSL $iis
@@ -202,8 +285,16 @@ foreach ($binding in $iis.siteBindings){
 
 Write-Host "Bindings added"
 foreach ($binding in $iis.siteBindings){
-    Write-Host "$binding"
+    Write-Host "https://$($binding)" -ForegroundColor Green
 }
 
-Write-Host "Done, thanks for using IIS Express Builder"
-Write-Host "Credit to Matt Hart for creating IIS Builder in the first place."
+Write-Host "Finished! Thank you for using IIS Express Builder by "  -NoNewline
+Write-Host "Paul Seal " -ForegroundColor Green -NoNewline
+Write-Host "from " -ForegroundColor White -NoNewline
+Write-Host "ClerksWell" -ForegroundColor White -BackgroundColor DarkBlue
+Write-Host "Credit to Matt Hart " -ForegroundColor Green -NoNewline 
+Write-Host "for creating the original " -NoNewline -ForegroundColor White
+Write-Host "IIS Builder " -ForegroundColor Green -NoNewline
+Write-Host "in the first place."
+
+Set-Location $dir
