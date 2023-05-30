@@ -1,6 +1,7 @@
 # IISExpress-Builder
 
-A PowerShell script, adapted from [https://github.com/mattou07/iis-builder](https://github.com/mattou07/iis-builder) that sets up custom domains with valid Self Signed SSL certificates for your .NET Core sites in IIS Express
+A PowerShell script that sets up custom domains with valid Self Signed SSL certificates for your .NET Core sites in IIS Express
+It was adapted from [https://github.com/mattou07/iis-builder](https://github.com/mattou07/iis-builder) so most of the credit goes to him.
 
 ## What problems does this tool solve?
 
@@ -18,11 +19,13 @@ This tool automates the following steps for you:
 1. Checks if you already have valid SSL certificate installed for the domains you want, and if not it creates them for you
 2. Gets the thumbprints from the certificates to be used later
 3. Adds the custom domains to the hosts file and points them to 127.0.0.1
-4. Edits the applicationHost.config file in the .vs folder, adding the bindings and SSL cert thumbprints for you
+4. Edits the applicationHost.config file in the .vs folder, adding the bindings for you
+5. Configures IIS Express for you to use the SSL certificate for these URLs
 
 ## Assumptions
 
 - You are using Visual Studio and IIS Express for developing your .NET Core website locally
+- You are using a Windows machine and you have a folder called `C:\Program Files (x86)\IIS Express` with a file in it called `C:\Program Files (x86)\IIS Express`
 
 ## How to use the tool?
 
