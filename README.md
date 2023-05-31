@@ -30,8 +30,8 @@ This tool automates the following steps for you:
 
 ## How to use the tool?
 
-1. Open Visual Studio and run your website in IIS Express. This ensures you have a .vs folder and an applicationhost.config file.
-Your site will be running with a localhost and port number by default.
+1. Open Visual Studio and run your website in IIS Express. This ensures you have a `.vs` folder and an `applicationhost.config` file in its subdirectories.
+Your site will be running with a localhost and port number address by default.
 
 ## Site A
 ![Site A Frontend Before](/images/site-a-frontend-before.png)
@@ -62,4 +62,5 @@ Your site will be running with a localhost and port number by default.
 
 ## Site B
 ![Site B Frontend After](/images/site-b-frontend-after.png)
+
 7. If you are using Umbraco you might need to add the Cultures and Hostnames to see the sites on the correct URLs
