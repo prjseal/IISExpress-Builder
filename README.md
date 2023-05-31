@@ -26,7 +26,7 @@ This tool automates the following steps for you:
 ## Assumptions
 
 - You are using Visual Studio and IIS Express for developing your .NET Core website locally
-- You are using a Windows machine and you have a folder called `C:\Program Files (x86)\IIS Express` with a file in it called `C:\Program Files (x86)\IIS Express`
+- You are using a Windows machine and you have a folder called `C:\Program Files (x86)\IIS Express` with a file in it called `IisExpressAdminCmd.exe`
 
 ## How to use the tool?
 
