@@ -35,7 +35,7 @@ Your site will be running with a localhost and port number by default.
 ## Site A
 ![Site A Frontend Before](/images/site-a-frontend-before.png)
 ## Site B
-![Site B Frontend Before](/images/site-a-frontend-before.png)
+![Site B Frontend Before](/images/site-b-frontend-before.png)
 2. Download the files `iis-express-builder.ps1` and `iis-express.config.json` from this repository and place those files in the root of your web project. (where your Program.cs file lives).
 ![Web Root](/images/web-root.png)
 3. Edit the `iis-express-config.json` file to update it with the custom domains you would like to use for this project.
