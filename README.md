@@ -64,3 +64,9 @@ Your site will be running with a localhost and port number address by default.
 ![Site B Frontend After](/images/site-b-frontend-after.png)
 
 7. If you are using Umbraco you might need to add the Cultures and Hostnames to see the sites on the correct URLs
+
+# Credits
+
+Thanks to Matt Hart for creating [IIS Builder](https://github.com/mattou07/iis-builder) in the first place and agreeing for me to release this separately.
+
+Thanks to my employers [ClerksWell](https://clerkswell.com/) for allowing me the time to work on this during work hours.
