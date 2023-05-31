@@ -32,23 +32,34 @@ This tool automates the following steps for you:
 
 1. Open Visual Studio and run your website in IIS Express. This ensures you have a .vs folder and an applicationhost.config file.
 Your site will be running with a localhost and port number by default.
+
 ## Site A
 ![Site A Frontend Before](/images/site-a-frontend-before.png)
+
 ## Site B
 ![Site B Frontend Before](/images/site-b-frontend-before.png)
+
 2. Download the files `iis-express-builder.ps1` and `iis-express.config.json` from this repository and place those files in the root of your web project. (where your Program.cs file lives).
 ![Web Root](/images/web-root.png)
+
 3. Edit the `iis-express-config.json` file to update it with the custom domains you would like to use for this project.
 !![config json file](/images/config-json.png)
+
 4. Run the `iis-express-build.ps1` file in PowerShell
+
 ## Before
 ![run the powershell script](/images/command-prompt-before.png)
+
 ## After
 ![powershell script after](/images/command-prompt-finished.png)
+
 5. In Visual Studio, rebuild your solution and run your site again.
+
 6. Visit one of the custom domains in the browser e.g. [https://sitea.localtest.me](https://sitea.localtest.me) and see that it works
+
 ## Site A
 ![Site A Frontend After](/images/site-a-frontend-after.png)
+
 ## Site B
 ![Site B Frontend After](/images/site-b-frontend-after.png)
 7. If you are using Umbraco you might need to add the Cultures and Hostnames to see the sites on the correct URLs
