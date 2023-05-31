@@ -70,3 +70,5 @@ Your site will be running with a localhost and port number address by default.
 Thanks to Matt Hart for creating [IIS Builder](https://github.com/mattou07/iis-builder) in the first place and agreeing for me to release this separately.
 
 Thanks to my employers [ClerksWell](https://clerkswell.com/) for allowing me the time to work on this during work hours.
+
+Thanks to Sarah at ClerksWell for showing me how to achieve this with the manual steps.
